@@ -33,17 +33,24 @@ def softmax_loss_naive(W, X, y, reg):
     # regularization!                                                           #
     #############################################################################
     for i in range(num_train):
-        s = X[i].dot(W)
-        exps = np.exp(s - np.max(s))
-        sm = exps / np.sum(exps)
-        loss -= np.log(sm[y[i]])
-        j = np.argmax(sm)
-        if j == y[i]:
-            dW[:, y[i]] += sm[y[i]] * (1 - sm[j])
-        else:
-            dW[:, y[i]] -= sm[j] * sm[y[i]]
+        scores = X[i].dot(W)
+        max_score = np.max(scores)
+        exp_scores = np.zeros_like(scores)
+        sum_exp_scores = 0
+        for j in range(num_classes):
+            exp_scores[j] = np.exp(scores[j] - max_score)  # Stable softmax
+            sum_exp_scores += exp_scores[j]
+        sm = exp_scores / sum_exp_scores
+        loss += -np.log(sm[y[i]])
+        for j in range(num_classes):
+            if j == y[i]:
+                dW[:, y[i]] += (sm[j] - 1) * X[i]
+            else:
+                dW[:, j] += sm[j] * X[i]
     loss /= num_train
+    dW /= num_train
     loss += 0.5 * reg * np.sum(W * W)
+    dW += reg * W
     #############################################################################
     #                          END OF YOUR CODE                                 #
     #############################################################################
@@ -60,6 +67,8 @@ def softmax_loss_vectorized(W, X, y, reg):
     # Initialize the loss and gradient to zero.
     loss = 0.0
     dW = np.zeros_like(W)
+    num_classes = W.shape[1]
+    num_train = X.shape[0]
 
     #############################################################################
     # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
@@ -67,10 +76,20 @@ def softmax_loss_vectorized(W, X, y, reg):
     # here, it is easy to run into numeric instability. Don't forget the        #
     # regularization!                                                           #
     #############################################################################
-    pass
+    correct_ix = np.eye(num_classes, dtype=bool)[y]
+    scores = X.dot(W)
+    exp_scores = np.exp(scores - np.max(scores, 1)[:, None])
+    sm = exp_scores / np.sum(exp_scores, 1)[:, None]
+    loss += np.sum(-np.log(sm[correct_ix]))
+
+    sm[correct_ix] -= 1
+    dW += np.dot(X.T, sm)
+    loss /= num_train
+    dW /= num_train
+    loss += 0.5 * reg * np.sum(W * W)
+    dW += reg * W
     #############################################################################
     #                          END OF YOUR CODE                                 #
     #############################################################################
 
     return loss, dW
-
