@@ -122,6 +122,13 @@ class TwoLayerNet(object):
         grads["b2"] = np.zeros_like(b2)
 
         sm[correct_ix] -= 1
+        # dscores = np.dot(h.T, sm)
+        dW2 = np.dot(h.T, sm)
+        dh = np.dot(W2.T, sm)
+        # dh, dW2, db2 = 0, 0, 0
+        dW1, db1 = 0, 0
+
+        # sm[correct_ix] -= 1
         grads["W2"] += np.dot(h.T, sm)
         grads["W2"] /= N
         grads["W2"] += reg * 2 * W2
