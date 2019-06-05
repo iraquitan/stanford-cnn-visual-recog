@@ -27,7 +27,8 @@ def affine_forward(x, w, b):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    (N, *dims) = x.shape
+    out = x.reshape(N, np.prod(dims)) @ w + b
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -60,7 +61,11 @@ def affine_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    (N, *dims) = x.shape
+    db = np.sum(dout, axis=0)
+    dw = np.dot(x.reshape(N, np.prod(dims)).T, dout)
+    dx = np.dot(dout, w.T)
+    dx = dx.reshape(x.shape)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -86,7 +91,7 @@ def relu_forward(x):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    out = np.maximum(0, x)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -112,8 +117,8 @@ def relu_backward(dout, cache):
     # TODO: Implement the ReLU backward pass.                                 #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-    pass
+    dx = dout
+    dx[x <= 0] = 0
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -160,16 +165,16 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     - out: of shape (N, D)
     - cache: A tuple of values needed in the backward pass
     """
-    mode = bn_param['mode']
-    eps = bn_param.get('eps', 1e-5)
-    momentum = bn_param.get('momentum', 0.9)
+    mode = bn_param["mode"]
+    eps = bn_param.get("eps", 1e-5)
+    momentum = bn_param.get("momentum", 0.9)
 
     N, D = x.shape
-    running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
-    running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
+    running_mean = bn_param.get("running_mean", np.zeros(D, dtype=x.dtype))
+    running_var = bn_param.get("running_var", np.zeros(D, dtype=x.dtype))
 
     out, cache = None, None
-    if mode == 'train':
+    if mode == "train":
         #######################################################################
         # TODO: Implement the training-time forward pass for batch norm.      #
         # Use minibatch statistics to compute the mean and variance, use      #
@@ -187,7 +192,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #                                                                     #
         # Note that though you should be keeping track of the running         #
         # variance, you should normalize the data based on the standard       #
-        # deviation (square root of variance) instead!                        # 
+        # deviation (square root of variance) instead!                        #
         # Referencing the original paper (https://arxiv.org/abs/1502.03167)   #
         # might prove to be helpful.                                          #
         #######################################################################
@@ -199,7 +204,7 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################
-    elif mode == 'test':
+    elif mode == "test":
         #######################################################################
         # TODO: Implement the test-time forward pass for batch normalization. #
         # Use the running mean and variance to normalize the incoming data,   #
@@ -218,8 +223,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         raise ValueError('Invalid forward batchnorm mode "%s"' % mode)
 
     # Store the updated running means back into bn_param
-    bn_param['running_mean'] = running_mean
-    bn_param['running_var'] = running_var
+    bn_param["running_mean"] = running_mean
+    bn_param["running_var"] = running_var
 
     return out, cache
 
@@ -318,7 +323,7 @@ def layernorm_forward(x, gamma, beta, ln_param):
     - cache: A tuple of values needed in the backward pass
     """
     out, cache = None, None
-    eps = ln_param.get('eps', 1e-5)
+    eps = ln_param.get("eps", 1e-5)
     ###########################################################################
     # TODO: Implement the training-time forward pass for layer norm.          #
     # Normalize the incoming data, and scale and  shift the normalized data   #
@@ -401,14 +406,14 @@ def dropout_forward(x, dropout_param):
     output; this might be contrary to some sources, where it is referred to
     as the probability of dropping a neuron output.
     """
-    p, mode = dropout_param['p'], dropout_param['mode']
-    if 'seed' in dropout_param:
-        np.random.seed(dropout_param['seed'])
+    p, mode = dropout_param["p"], dropout_param["mode"]
+    if "seed" in dropout_param:
+        np.random.seed(dropout_param["seed"])
 
     mask = None
     out = None
 
-    if mode == 'train':
+    if mode == "train":
         #######################################################################
         # TODO: Implement training phase forward pass for inverted dropout.   #
         # Store the dropout mask in the mask variable.                        #
@@ -421,7 +426,7 @@ def dropout_forward(x, dropout_param):
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################
-    elif mode == 'test':
+    elif mode == "test":
         #######################################################################
         # TODO: Implement the test phase forward pass for inverted dropout.   #
         #######################################################################
@@ -449,10 +454,10 @@ def dropout_backward(dout, cache):
     - cache: (dropout_param, mask) from dropout_forward.
     """
     dropout_param, mask = cache
-    mode = dropout_param['mode']
+    mode = dropout_param["mode"]
 
     dx = None
-    if mode == 'train':
+    if mode == "train":
         #######################################################################
         # TODO: Implement training phase backward pass for inverted dropout   #
         #######################################################################
@@ -464,7 +469,7 @@ def dropout_backward(dout, cache):
         #######################################################################
         #                          END OF YOUR CODE                           #
         #######################################################################
-    elif mode == 'test':
+    elif mode == "test":
         dx = dout
     return dx
 
@@ -700,13 +705,13 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     - cache: Values needed for the backward pass
     """
     out, cache = None, None
-    eps = gn_param.get('eps',1e-5)
+    eps = gn_param.get("eps", 1e-5)
     ###########################################################################
     # TODO: Implement the forward pass for spatial group normalization.       #
     # This will be extremely similar to the layer norm implementation.        #
     # In particular, think about how you could transform the matrix so that   #
     # the bulk of the code is similar to both train-time batch normalization  #
-    # and layer normalization!                                                # 
+    # and layer normalization!                                                #
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
